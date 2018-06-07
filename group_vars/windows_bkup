@@ -1,0 +1,6 @@
+ansible_user: Administrator
+ansible_password: f4=K*H!$5K
+ansible_port: 5986      #5986 Port can be used with HTTPS
+ansible_connection: winrm
+ansible_winrm_scheme: https
+ansible_winrm_server_cert_validation: ignore

@@ -1,0 +1,89 @@
+
+Administrator
+GXxxxxxxxxxx
+https://github.com/ansible/ansible-examples
+
+
+################ FOLLOWED BELOW BLOG ####################
+http://darrylcauldwell.com/how-to-setup-an-ansible-test-lab-for-windows-managed-nodes-custom-windows-modules/
+https://www.virtualtothecore.com/en/configuring-windows-machines-for-ansible/
+#######   MAKESURE RUN THIS SCRIPT AS ROOT/SUDO USER ########
+#INSTALL pywinrm ON CONTROL NODE
+pip install "pywinrm>=0.2.2"
+
+############### Installing python-kerberos dependencies ############
+# Via Yum
+yum -y install gcc  openssl-devel python-devel krb5-devel krb5-libs krb5-workstation 
+yum install libffi libffi-devel
+# Via Apt (Ubuntu)
+#apt-get install python-dev libkrb5-dev krb5-user
+
+
+##############  Installing python-kerberos  ########################
+pip install pywinrm[kerberos]
+
+############## Installing requests-credssp #########################
+#CredSSP authentication can be used to authenticate with both domain and local accounts. 
+#It allows credential delegation to do second hop authentication on a remote host by sending -
+#an encrypted form of the credentials to the remote host using the CredSSP protocol.
+54.236.63.151
+pip install pywinrm[credssp]
+
+curl -vk -d "" -u "Administrator:G44k5FSSXpw" https://54.236.63.151:5986/wsman"
+=======================================WINDOWS SETUP======================
+
+### Use the Winrm command to locate listeners and the addresses by typing the following command at a command prompt
+
+winrm e winrm/config/listener
+
+####To check the state of configuration settings, type 
+
+winrm get winrm/config.
+
+########### Pass the -CertValidityDays option to customize the expiration date of the generated certificate:
+
+powershell.exe -File ConfigureRemotingForAnsible.ps1 -CertValidityDays 100
+
+############ Pass the -EnableCredSSP switch to enable CredSSP as an authentication option:
+
+powershell.exe -File ConfigureRemotingForAnsible.ps1 -EnableCredSSP
+
+########### Pass the -ForceNewSSLCert switch to force a new SSL certificate to be attached to an already existing winrm listener. 
+##########(Avoids SSL winrm errors on syspreped Windows images after the CN changes):
+
+powershell.exe -File ConfigureRemotingForAnsible.ps1 -ForceNewSSLCert
+
+
+########### Pass the -SkipNetworkProfileCheck switch to configure winrm to listen on PUBLIC zone interfaces. 
+######(Without this option, the script will fail if any network interface on device is in PUBLIC zone):
+
+powershell.exe -File ConfigureRemotingForAnsible.ps1 -SkipNetworkProfileCheck
+
+
+
+Get-ExecutionPolicy
+
+Set-ExecutionPolicy "RemoteSigned"
+Enable-PSRemoting
+
+++++++++++++++++++++++++++++++++++++++++++++
+============================================
+++++++++++++++++++++++++++++++++++++++++++++
+Steps done on windows machine
+
+1.Make an Administrator account & save its credential.
+2.winrm quick config --> Ensure that winrm is configured to allow incoming requests on the server
+3.Check "Get-ExecutionPolicy" Status [It should be RemoteSigned]
+  if not set it so ....
+  Set-ExecutionPolicy RemoteSigned  
+4. Enable-PSRemoting -Force  -->Ensure that we can take ps remote sessions of the computer
+	test via --1 Test-WsMan IPofcomputer
+	         --2 Run a simple scriptblock to see that we can take session via winrm
+			  Invoke-Command -ComputerName 54.236.63.151 -ScriptBlock (hostname) -Credential Administrator
+			  
+			  Output:---Returns win-lab-01 --hostname of the computer , so we are doing good.
+5. winrm set winrm/config/service/auth @{Basic="true"} -->Required  for ansible connect simply use basic win auth
+6. Set-netFirewallRule -Name "WINRM-HTTP-In-TCP-PUBLIC" -RemoteAddress Any
+    VERY IMPORTANT:--this step isn't required fore remote PS sessions, but required for ansible as it does not establish a PS session, but executes a remote script
+7. netsh advfirewall firewall  add rule Profile=public name="Allow WinRM HTTPS" dir=in localport=5986 protocol=TCP action=allow
+      

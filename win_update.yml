@@ -1,0 +1,32 @@
+# file: playbook-install-firefox.yml
+---
+- name: Search Patches to be updated on Windows System
+  hosts: windows
+  tasks:
+    - name: Check Available Patches to be Installed
+      win_updates: 
+        catagory_names:
+          - SecurityUpdates
+          - CriticalUpdates
+          - UpdateRollups
+        state: searched    #Use "installed" if you need to install the found patches
+        log_path: C:\Users\Administrator\Desktop\Test\ansible_update_log.txt
+        register: result
+
+        # output results
+      - debug: var=result
+    
+       # reboot only if required
+      - win_reboot:
+        when: result.reboot_required
+        ignore_errors: yes
+
+
+# POINTS to be remembered 
+#name                    description                                                   returned  
+#installed_update_count  The number of updates successfully installed                  success int 2
+#reboot_required True    when the target server requires a reboot to complete updates 
+#                        (no further updates can be installed until after a reboot)    success boolean True
+#failed_update_count     The number of updates that failed to install                  always  int 0
+#found_update_count      The number of updates found needing to be applied             success int 3
+#updates                 List of updates that were found/installed                     success dictionary  None
