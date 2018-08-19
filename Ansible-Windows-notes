@@ -7,6 +7,7 @@ https://github.com/ansible/ansible-examples
 ################ FOLLOWED BELOW BLOG ####################
 http://darrylcauldwell.com/how-to-setup-an-ansible-test-lab-for-windows-managed-nodes-custom-windows-modules/
 https://www.virtualtothecore.com/en/configuring-windows-machines-for-ansible/
+https://www.youtube.com/watch?reload=9&v=FEdXUv02Dbg&t=798s
 #######   MAKESURE RUN THIS SCRIPT AS ROOT/SUDO USER ########
 #INSTALL pywinrm ON CONTROL NODE
 pip install "pywinrm>=0.2.2"
